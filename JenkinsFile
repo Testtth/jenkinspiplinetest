@@ -20,21 +20,15 @@ pipeline {
       }
     }
     stage('Code Quality Check via SonarQube') {
-   steps {
-       script {
-         // sh 'echo by-pass sonar scan'
-       def scannerHome = tool 'SonarQubeScanner';
-        withSonarQubeEnv("sonarqube") {
-         sh "${mvn}/bin/mvn clean verify sonar:sonar
-        -Dsonar.projectKey=testjenkins \
-        -Dsonar.sources=. \
-        -Dsonar.css.node=. \
-        -Dsonar.host.url=http://172.16.16.61:9000 \
-        -Dsonar.login=sqa_31a703fb9a6294ef60745d2ff44f3536327d09cd"
-             }
-           }
-       }
-   }
+        checkout scm
+  }
+  stage('SonarQube Analysis') {
+    def mvn = tool 'Default Maven';
+    withSonarQubeEnv() {
+      sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=testjenkins"
+    }
+  }
+
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "abhishekf5/ultimate-cicd:${BUILD_NUMBER}"
